@@ -1,0 +1,11 @@
+{
+  "token": "INSERT HERE",
+  "prefix": "!",
+  "admins": [],
+  "autoUpdate": 604800,
+  "API": {
+    "gateway": "us-central1-genesisboc-45f47.cloudfunctions.net",
+    "endpoint": "/requestv0"
+  },
+  "debug": false
+}
