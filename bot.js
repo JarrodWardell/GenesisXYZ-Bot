@@ -6,9 +6,11 @@
 const { Client, MessagePayload } = require('discord.js');
 const conf = require('./main.conf.json');
 const network = require('./functions/network.js');
+const fs = require('fs');
 
 const token = conf.token;
 const prefix = conf.prefix;
+const cacheFile = __dirname + "/cardCache.json";
 
 var bot = new Client({ ws: { properties: { $browser: "Discord iOS" }}, intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"] });
 
@@ -19,9 +21,36 @@ var lastUpdate = 0;
 let cardCache = {};
 
 /*
+  Load the current card cache from local file if present; Otherwise, update card cache. Update if the cache is out of date.
+*/
+function loadCardCache() {
+  if (conf.debug) console.log(`Loading card cache.`);
+  if (fs.existsSync(cacheFile)) {
+    if (conf.debug) console.log(`Card cache exists.`);
+    let data = fs.readFileSync(cacheFile);
+    if (data) data = JSON.parse(data);
+    if (data && data.lastUpdate && data.cardCache && data.lastUpdate > Date.now() - conf.autoUpdate*1000) {
+      lastUpdate = data.lastUpdate;
+      cardCache = data.cardCache;
+      return;
+    }
+  }
+  if (conf.debug) console.log(`Card cache out of date or non-existant.`);
+  updateCardCache();
+}
+
+/*
+  Save the current card cache & last update time to local file.
+*/
+function saveCardCache() {
+  if (conf.debug) console.log(`Saving card cache.`);
+  fs.writeFileSync(cacheFile, JSON.stringify({lastUpdate: lastUpdate, cardCache: cardCache}));
+}
+
+/*
   Update the card cache with new data pulled from the API.
 */
-async function updateCards() {
+async function updateCardCache() {
   lastUpdate = -1;
 
   let startTime = Date.now();
@@ -67,6 +96,8 @@ async function updateCards() {
 
   lastUpdate = Date.now();
   console.log(`Updated card list in ${Math.round((Date.now() - startTime) / 1000)} seconds.`);
+
+  saveCardCache();
 }
 
 bot.on("messageCreate", async message => {
@@ -77,7 +108,7 @@ bot.on("messageCreate", async message => {
     args[0] = args[0].toLowerCase();
 
     if (args[0] == "update" && conf.admins.includes(message.author.id)) {
-      updateCards();
+      updateCardCache();
       message.reply("Updating the card cache.");
     }
     if (args[0] == "card") { // check if command
@@ -134,7 +165,7 @@ bot.on("messageCreate", async message => {
       }
 
       if (lastUpdate < Date.now() - conf.autoUpdate*1000) { // card cache out of date
-        updateCards();
+        updateCardCache();
       }
     } else if (args[0] == "help") {
       message.reply(`To search for a card, type \`${prefix}card [-set] card name\`\nSet is optional, but must be preceded by a dash and relates to the set code seen in the circle on the card.  If not provided, the default is the most recent release of the card.\nEx. \`${prefix}card bar\` - Search for cards with "bar" in the name.\nEx. \`${prefix}card barruk\` - Search for and display most recent Barruk\nEx. \`${prefix}card -aph Barruk\` - Search for and display Alpha Barruk`)
@@ -158,5 +189,5 @@ bot.on("ready", async evt => {
     });
 });
 
-updateCards();
+loadCardCache();
 bot.login(token);
