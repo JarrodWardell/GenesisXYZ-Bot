@@ -112,21 +112,22 @@ bot.on("messageCreate", async message => {
       message.reply("Updating the card cache.");
     }
     if (args[0] == "card") { // check if command
-      if (args[1] && args[1].startsWith("-") ? args[2] : true) {
+      if (args[1] && args[1].startsWith("-") ? args[2] || true : true) {
         if (lastUpdate === -1) { // card cache updating, might not have all cards loaded
           message.reply("Currently updating the card cache, please try again in a minute.");
           return;
         }
 
-        let run = args[1].startsWith("-") && args[2] ? args[1].replace("-", "").toUpperCase() : false;
-        let searchTerm = message.content.replace(prefix + args[0] + " " + (run ? args[1] + " " : ""), "");
+        let run = args[1].startsWith("-") && (args[2] || true) ? args[1].replace("-", "").toUpperCase() : false;
+        let searchTerm = message.content.replace(prefix + args[0] + " " + (run ? args[1] : ""), "");
+        searchTerm = searchTerm.replace(" ", "");
         let cards = [];
 
         for (let card in cardCache) {
-          if (card.toLowerCase().includes(searchTerm.toLowerCase())) {
+          if ((run && !args[2]) || card.toLowerCase().includes(searchTerm.toLowerCase())) {
             if (run) {
               for (let variant in cardCache[card]) {
-                if (variant.includes(run)) {
+                if (variant.toUpperCase().includes(run)) {
                   cards.push([card, variant]);
                   break;
                 }
@@ -149,7 +150,7 @@ bot.on("messageCreate", async message => {
           message.channel.send({embeds: [{title: cards[0][0], image: {url: cardCache[cards[0][0]][cards[0][1]]}, url: "https://gboc.xyz/gallery", footer: {text: "Data from gboc.xyz"}}]});
         } else {
           let replyString = "Cards matching that term:";
-          if (cards.length > 10) {
+          if (cards.length > 20) {
             replyString = "Too many cards matching that term! Try being more specific.";
           } else if (cards.length == 0) {
             replyString = "No cards matching that term! Try something else.";
