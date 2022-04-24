@@ -12,7 +12,7 @@ const prefix = conf.prefix;
 
 var bot = new Client({ ws: { properties: { $browser: "Discord iOS" }}, intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"] });
 
-let releasesCache = ["APH", "BET", "JAE", "RAZ", "J2", "OP1"];
+let releasesCache = ["APH", "BET", "JAE", "RAZ", "J2", "J2 Damjan", "OP1"];
 
 var lastUpdate = 0;
 
@@ -87,7 +87,7 @@ bot.on("messageCreate", async message => {
           return;
         }
 
-        let run = args[1].startsWith("-") && args[2] ? args[1].replace("-", "") : false;
+        let run = args[1].startsWith("-") && args[2] ? args[1].replace("-", "").toUpperCase() : false;
         let searchTerm = message.content.replace(prefix + args[0] + " " + (run ? args[1] + " " : ""), "");
         let cards = [];
 
@@ -95,8 +95,8 @@ bot.on("messageCreate", async message => {
           if (card.toLowerCase().includes(searchTerm.toLowerCase())) {
             if (run) {
               for (let variant in cardCache[card]) {
-                if (variant.toLowerCase() == run.toLowerCase()) {
-                  cards.push([card, run]);
+                if (variant.includes(run)) {
+                  cards.push([card, variant]);
                   break;
                 }
               }
