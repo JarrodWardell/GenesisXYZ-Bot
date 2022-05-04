@@ -120,7 +120,7 @@ bot.on("messageCreate", async message => {
 
         let run = args[1].startsWith("-") && (args[2] || true) ? args[1].replace("-", "").toUpperCase() : false;
         let searchTerm = message.content.replace(prefix + args[0] + " " + (run ? args[1] : ""), "");
-        searchTerm = searchTerm.replace(" ", "");
+        if (run) searchTerm = searchTerm.replace(" ", "");
         let cards = [];
 
         for (let card in cardCache) {
