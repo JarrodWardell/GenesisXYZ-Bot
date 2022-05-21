@@ -53,6 +53,8 @@ function saveCardCache() {
 async function updateCardCache() {
   lastUpdate = -1;
 
+  let tempCardCache = {};
+
   let startTime = Date.now();
 
   if (conf.debug) console.log(`Getting updated card list.`);
@@ -90,9 +92,11 @@ async function updateCardCache() {
         if (variants) newCardObj[cardRuns[x][0]] = variants;
       }
 
-      cardCache[cardNames[x]] = newCardObj;
+      tempCardCache[cardNames[x]] = newCardObj;
     }
   }
+
+  cardCache = JSON.parse(JSON.stringify(tempCardCache));
 
   lastUpdate = Date.now();
   console.log(`Updated card list in ${Math.round((Date.now() - startTime) / 1000)} seconds.`);
@@ -113,10 +117,10 @@ bot.on("messageCreate", async message => {
     }
     if (args[0] == "card") { // check if command
       if (args[1] && args[1].startsWith("-") ? args[2] || true : true) {
-        if (lastUpdate === -1) { // card cache updating, might not have all cards loaded
+        /*if (lastUpdate === -1) { // card cache updating, might not have all cards loaded
           message.reply("Currently updating the card cache, please try again in a minute.");
           return;
-        }
+        }*/
 
         let run = args[1].startsWith("-") && (args[2] || true) ? args[1].replace("-", "").toUpperCase() : false;
         let searchTerm = message.content.replace(prefix + args[0] + " " + (run ? args[1] : ""), "");
@@ -165,7 +169,7 @@ bot.on("messageCreate", async message => {
         message.reply("Please provide a search term.")
       }
 
-      if (lastUpdate < Date.now() - conf.autoUpdate*1000) { // card cache out of date
+      if (lastUpdate != -1 && lastUpdate < Date.now() - conf.autoUpdate*1000) { // card cache out of date
         updateCardCache();
       }
     } else if (args[0] == "help") {
